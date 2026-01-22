@@ -3,8 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Search, UserPlus, Phone, MessageSquare,
     ChevronRight, CheckCircle2, X,
-    FileText, History, Ban, RefreshCw, Calendar
+    FileText, History, Ban, RefreshCw, Calendar, Download, Upload
 } from 'lucide-react';
+import { api } from '../services/api';
 import { Lead } from '../types';
 import { DOCTORS } from '../constants';
 
@@ -13,9 +14,10 @@ interface LeadsViewProps {
     onUpdateLead: (lead: Lead) => void;
     onOpenAddModal: () => void;
     initialFilter?: string;
+    onRefresh?: () => void;
 }
 
-export const LeadsView: React.FC<LeadsViewProps> = ({ leads, onUpdateLead, onOpenAddModal, initialFilter = 'All' }) => {
+export const LeadsView: React.FC<LeadsViewProps> = ({ leads, onUpdateLead, onOpenAddModal, initialFilter = 'All', onRefresh }) => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null); // Store ID, not object
@@ -69,6 +71,121 @@ export const LeadsView: React.FC<LeadsViewProps> = ({ leads, onUpdateLead, onOpe
         navigate('/dashboard/patients', { state: { leadToConvert: lead } });
     };
 
+    // --- Export Feature ---
+    const handleExportCSV = () => {
+        if (filteredLeads.length === 0) {
+            alert('No leads to export.');
+            return;
+        }
+
+        const headers = ['Name', 'Phone', 'Status', 'Source', 'Gender', 'Age', 'Problem', 'Date Added'];
+        const csvRows = [
+            headers.join(','),
+            ...filteredLeads.map(lead => [
+                `"${lead.name || ''}"`,
+                `"${lead.phone || ''}"`,
+                `"${lead.status || ''}"`,
+                `"${lead.source || ''}"`,
+                `"${lead.gender || ''}"`,
+                `"${lead.age || ''}"`,
+                `"${lead.problem || ''}"`,
+                `"${lead.dateAdded || ''}"`
+            ].join(','))
+        ];
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Include filter status in filename
+        const dateStr = new Date().toISOString().split('T')[0];
+        const statusLabel = filterStatus === 'All' ? 'All_Leads' : filterStatus.replace(/ /g, '_');
+        a.download = `JanmaSethu_Leads_${statusLabel}_${dateStr}.csv`;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    // --- Import Feature ---
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleImportClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const text = e.target?.result as string;
+            if (!text) return;
+
+            const rows = text.split('\n').map(row => row.split(','));
+            // CSV columns match export: Name, Phone, Status, Source, Gender, Age, Problem, Date Added
+            // Skipping header if detected
+            const startIndex = rows[0][0].toLowerCase().includes('name') ? 1 : 0;
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (let i = startIndex; i < rows.length; i++) {
+                const cols = rows[i].map(c => c.trim().replace(/^"|"$/g, ''));
+                if (cols.length < 2 || !cols[0]) continue; // Skip empty rows
+
+                // Match export column order: Name, Phone, Status, Source, Gender, Age, Problem, Date Added
+                const [name, phone, _status, source, gender, age, problem] = cols;
+
+                // Basic validation
+                if (!name || !phone) continue;
+
+                try {
+                    // Create lead with all CSV fields properly mapped
+                    // Note: We trim values and keep them as strings - the backend will handle empty strings
+                    const genderVal = gender ? gender.trim() : '';
+                    const ageVal = age ? age.trim() : '';
+                    const problemVal = problem ? problem.trim() : '';
+
+                    const leadData: Record<string, any> = {
+                        name,
+                        phone,
+                        source: source ? source.trim() : 'Bulk Import',
+                        // Always set status to 'New Inquiry' for imported leads
+                        status: 'New Inquiry',
+                        inquiry: 'Bulk Import',
+                        date_added: new Date().toISOString()
+                    };
+
+                    // Only add these fields if they have actual values
+                    if (genderVal) leadData.gender = genderVal;
+                    if (ageVal) leadData.age = ageVal;
+                    if (problemVal) leadData.problem = problemVal;
+
+                    console.log('Importing lead:', name, leadData);
+                    await api.createLead(leadData);
+                    successCount++;
+                } catch (err) {
+                    console.error('Failed to import lead:', name, err);
+                    errorCount++;
+                }
+            }
+
+            alert(`Import Complete!\nSuccess: ${successCount}\nFailed: ${errorCount}`);
+            if (onRefresh && successCount > 0) {
+                onRefresh();
+            }
+            if (fileInputRef.current) fileInputRef.current.value = ''; // Reset
+        };
+        reader.readAsText(file);
+    };
+
     return (
         <div className="flex flex-col lg:flex-row h-full gap-4 lg:gap-6 relative">
             {/* Main Table Area */}
@@ -87,6 +204,28 @@ export const LeadsView: React.FC<LeadsViewProps> = ({ leads, onUpdateLead, onOpe
                     </div>
 
                     <div className="flex flex-wrap gap-2 sm:gap-3">
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept=".csv"
+                            className="hidden"
+                        />
+                        <button
+                            onClick={handleExportCSV}
+                            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-brand-surface border border-brand-border hover:bg-brand-bg text-brand-textSecondary font-bold rounded-lg sm:rounded-xl flex items-center text-xs sm:text-sm transition-all active:scale-95"
+                            title="Export to CSV"
+                        >
+                            <Download size={16} className="sm:mr-2" /> <span className="hidden sm:inline">Export</span>
+                        </button>
+                        <button
+                            onClick={handleImportClick}
+                            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-brand-surface border border-brand-border hover:bg-brand-bg text-brand-textSecondary font-bold rounded-lg sm:rounded-xl flex items-center text-xs sm:text-sm transition-all active:scale-95"
+                            title="Import from CSV"
+                        >
+                            <Upload size={16} className="sm:mr-2" /> <span className="hidden sm:inline">Import</span>
+                        </button>
+
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}

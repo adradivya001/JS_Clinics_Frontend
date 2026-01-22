@@ -2,9 +2,10 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}", // Added components dir since it's in root
-    "./**/*.{js,ts,jsx,tsx}" // Catch-all just in case
+    "./App.tsx",
+    "./index.tsx",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    "./services/**/*.{js,ts,jsx,tsx}"
   ],
   theme: {
     extend: {

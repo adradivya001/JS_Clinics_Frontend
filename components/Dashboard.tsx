@@ -468,7 +468,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, userRole }) => {
             } />
             <Route path="leads" element={
               <div className="bg-brand-surface rounded-2xl shadow-sm border border-brand-border overflow-hidden animate-slide-up h-full flex flex-col">
-                <LeadsView leads={leads} onUpdateLead={handleUpdateLead} onOpenAddModal={() => setIsAddLeadModalOpen(true)} initialFilter={leadsFilter} />
+                <LeadsView
+                  leads={leads}
+                  onUpdateLead={handleUpdateLead}
+                  onOpenAddModal={() => setIsAddLeadModalOpen(true)}
+                  initialFilter={leadsFilter}
+                  onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+                />
               </div>
             } />
             <Route path="appointments" element={

@@ -1,6 +1,6 @@
 
 
-export const API_BASE_URL = ''; // Relative path to use Vite proxy
+export const API_BASE_URL = ''; // Always use Vite proxy to handle CORS automatically
 
 export interface AppointmentUpdatePayload {
     appointment_date?: string;

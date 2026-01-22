@@ -6,11 +6,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
     server: {
-      port: parseInt(env.VITE_PORT || '4500'),
+      port: 4500,
       host: '0.0.0.0',
       proxy: {
         '/api': {
-          target: env.VITE_API_TARGET || 'http://localhost:8000',
+          target: env.VITE_BACKEND_URL || 'http://localhost:8000',
           changeOrigin: true,
           secure: false,
         }
