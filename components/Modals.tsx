@@ -218,6 +218,11 @@ interface AddLeadModalProps {
     phone: string;
     source: string;
     inquiry: string;
+    referralRequired: 'Yes' | 'No'; // New
+    alternativePhoneNumber: string; // New
+    husbandOrGuardianName: string; // New
+    husbandAge: string; // New
+    location: string; // New
     age: string;
     gender: 'Male' | 'Female' | 'Other';
     problem: string;
@@ -232,6 +237,11 @@ export const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onC
     phone: '',
     source: 'Walk-In',
     inquiry: 'General',
+    referralRequired: 'No' as 'Yes' | 'No', // Default
+    alternativePhoneNumber: '',
+    husbandOrGuardianName: '',
+    husbandAge: '',
+    location: '',
     age: '',
     gender: 'Female' as 'Male' | 'Female' | 'Other',
     problem: '',
@@ -261,6 +271,11 @@ export const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onC
       phone: '',
       source: 'Walk-In',
       inquiry: 'General',
+      referralRequired: 'No',
+      alternativePhoneNumber: '',
+      husbandOrGuardianName: '',
+      husbandAge: '',
+      location: '',
       age: '',
       gender: 'Female',
       problem: '',
@@ -320,6 +335,35 @@ export const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onC
                   </div>
                 </div>
                 <div>
+                  <label className="block text-xs font-bold text-brand-textSecondary uppercase mb-1">Husband / Guardian Name</label>
+                  <input
+                    value={data.husbandOrGuardianName}
+                    onChange={e => setData({ ...data, husbandOrGuardianName: e.target.value })}
+                    className="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-textPrimary outline-none focus:border-brand-primary transition-colors"
+                    placeholder="Enter husband/guardian name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-brand-textSecondary uppercase mb-1">Husband Age</label>
+                  <input
+                    type="number"
+                    value={data.husbandAge}
+                    onChange={e => setData({ ...data, husbandAge: e.target.value })}
+                    className="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-textPrimary outline-none focus:border-brand-primary transition-colors"
+                    placeholder="Husband Age"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-brand-textSecondary uppercase mb-1">City / Location</label>
+                  <input
+                    value={data.location}
+                    onChange={e => setData({ ...data, location: e.target.value })}
+                    className="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-textPrimary outline-none focus:border-brand-primary transition-colors"
+                    placeholder="Enter city/location"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-xs font-bold text-brand-textSecondary uppercase mb-1">Phone Number</label>
                   <input
                     required
@@ -327,6 +371,15 @@ export const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onC
                     onChange={e => setData({ ...data, phone: e.target.value })}
                     className="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-textPrimary outline-none focus:border-brand-primary transition-colors"
                     placeholder="Enter phone"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-brand-textSecondary uppercase mb-1">Alternative Phone Number</label>
+                  <input
+                    value={data.alternativePhoneNumber}
+                    onChange={e => setData({ ...data, alternativePhoneNumber: e.target.value })}
+                    className="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-textPrimary outline-none focus:border-brand-primary transition-colors"
+                    placeholder="Enter alt phone"
                   />
                 </div>
               </div>
@@ -392,16 +445,14 @@ export const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onC
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-brand-textSecondary uppercase mb-1">Inquiry Type</label>
+                <label className="block text-xs font-bold text-brand-textSecondary uppercase mb-1">Referral Required</label>
                 <select
-                  value={data.inquiry}
-                  onChange={e => setData({ ...data, inquiry: e.target.value })}
+                  value={data.referralRequired} // Cleaned up from Inquiry Type
+                  onChange={e => setData({ ...data, referralRequired: e.target.value as 'Yes' | 'No' })}
                   className="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-textPrimary outline-none focus:border-brand-primary transition-colors"
                 >
-                  <option>General</option>
-                  <option>IVF Consult</option>
-                  <option>IUI Procedure</option>
-                  <option>Pricing</option>
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
                 </select>
               </div>
             </div>

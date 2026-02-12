@@ -8,6 +8,7 @@ export const InternalAssistant: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isTyping, setIsTyping] = useState(false);
+    const [isLocked, setIsLocked] = useState(false);
 
     const handleSendMessage = async (content: string) => {
         // Add User Message
@@ -22,9 +23,49 @@ export const InternalAssistant: React.FC = () => {
 
         try {
             // API Call
-            const response = await api.internalAssistant.chat(content);
+            const response = await api.internalAssistant.chat({ message: content });
 
             // Add Assistant Message
+            const botMsg: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: response.reply,
+                timestamp: Date.now(),
+                options: response.options
+            };
+            setMessages(prev => [...prev, botMsg]);
+
+            if (response.type === 'CONFIRMATION_REQUIRED') {
+                setIsLocked(true);
+            }
+        } catch (error: any) {
+            console.error('Chat error:', error);
+            handleError(error);
+        } finally {
+            setIsTyping(false);
+        }
+    };
+
+    const handleOptionClick = async (option: any) => {
+        setIsLocked(false); // optimistic unlock or keep locked until response? 
+        // "Chat locks during confirmation" -> implies until resolution.
+        // But if I click cancel, I want to see the "Cancelled" message and then unlock.
+        // UI Guideline: "Chat returns to normal state" on Success/Failure.
+        // I will keep visual lock (via isTyping) but remove the "options" lock so input restores after this turn.
+
+        setIsTyping(true);
+        // Maybe add a user message representing the choice? 
+        // "User selected: Confirm" - Not required but good UX.
+        // Let's just proceed with the logical flow.
+
+        try {
+            let response;
+            if (option.type === 'cancel') {
+                response = await api.internalAssistant.chat({ cancelToken: option.token });
+            } else {
+                response = await api.internalAssistant.chat({ confirmationToken: option.token });
+            }
+
             const botMsg: ChatMessage = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
@@ -32,30 +73,33 @@ export const InternalAssistant: React.FC = () => {
                 timestamp: Date.now()
             };
             setMessages(prev => [...prev, botMsg]);
+
         } catch (error: any) {
-            console.error('Chat error:', error);
-
-            // Handle specific error codes if available in error object, tailored fallback
-            let errorMessage = "Something went wrong. Please try again.";
-
-            if (error.status === 401 || error.status === 403) {
-                errorMessage = "You are not authorized to perform this request.";
-            } else if (error.message) {
-                // If it's a feature flag or specific backend message
-                errorMessage = error.message;
-            }
-
-            const errorMsg: ChatMessage = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: errorMessage,
-                timestamp: Date.now(),
-                isError: true
-            };
-            setMessages(prev => [...prev, errorMsg]);
+            console.error('Option error:', error);
+            handleError(error);
         } finally {
             setIsTyping(false);
+            setIsLocked(false);
         }
+    };
+
+    const handleError = (error: any) => {
+        let errorMessage = "Something went wrong. Please try again.";
+
+        if (error.status === 401 || error.status === 403) {
+            errorMessage = "You are not authorized to perform this request.";
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
+        const errorMsg: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: errorMessage,
+            timestamp: Date.now(),
+            isError: true
+        };
+        setMessages(prev => [...prev, errorMsg]);
     };
 
     return (
@@ -79,6 +123,8 @@ export const InternalAssistant: React.FC = () => {
                 messages={messages}
                 isTyping={isTyping}
                 onSendMessage={handleSendMessage}
+                onOptionClick={handleOptionClick}
+                isLocked={isLocked}
             />
         </>
     );

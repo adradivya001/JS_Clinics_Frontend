@@ -5,9 +5,10 @@ import { Bot, User } from 'lucide-react';
 interface MessageListProps {
     messages: ChatMessage[];
     isTyping: boolean;
+    onOptionClick?: (option: any) => void;
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ messages, isTyping }) => {
+export const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onOptionClick }) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -43,7 +44,7 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, isTyping }) 
                     </div>
 
                     <div className={`
-                        max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap
+                        max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words
                         ${msg.role === 'user'
                             ? 'bg-brand-primary text-brand-bg rounded-tr-sm'
                             : msg.isError
@@ -54,6 +55,26 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, isTyping }) 
                     </div>
                 </div>
             ))}
+            {/* Render options for the last message if available */}
+            {messages.length > 0 && messages[messages.length - 1].options && (
+                <div className="flex flex-col space-y-2 ml-11 max-w-[80%]">
+                    {messages[messages.length - 1].options?.map((option, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => onOptionClick?.(option)}
+                            className={`
+                                w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors text-left
+                                border shadow-sm
+                                ${option.type === 'cancel'
+                                    ? 'bg-white border-red-200 text-red-600 hover:bg-red-50'
+                                    : 'bg-white border-brand-border text-brand-primary hover:bg-brand-surface hover:border-brand-primary'}
+                            `}
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {isTyping && (
                 <div className="flex items-start gap-3">

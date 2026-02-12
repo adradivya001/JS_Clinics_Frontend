@@ -127,7 +127,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, userRole }) => {
           gender: item.gender || item.Gender || item.sex,
           problem: item.problem || item.Problem || item.presenting_problem,
           treatmentDoctor: item.treatment_doctor || item.treatmentDoctor || item.camp_doctor || item.CampDoctor,
-          treatmentSuggested: item.treatment_suggested || item.treatmentSuggested || item.suggested_tx || item.SuggestedTx
+          treatmentSuggested: item.treatment_suggested || item.treatmentSuggested || item.suggested_tx || item.SuggestedTx,
+          husbandAge: item.husband_age || item.husbandAge,
+          location: item.location || item.Location || item.city || item.City
         })) : [];
         console.log('Raw Leads Data (for debugging):', leadItems[0]); // Debug log
         setLeads(mappedLeads);
@@ -225,6 +227,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, userRole }) => {
     phone: string;
     source: string;
     inquiry: string;
+    referralRequired: 'Yes' | 'No';
+    alternativePhoneNumber: string;
+    husbandOrGuardianName: string;
+    husbandAge: string;
+    location: string;
     age: string;
     gender: 'Male' | 'Female' | 'Other';
     problem: string;
@@ -242,7 +249,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, userRole }) => {
         name: data.name,
         phone: data.phone,
         source: data.source,
-        inquiry: data.inquiry,
+        // inquiry: data.inquiry, // Legacy
+        inquiry: data.referralRequired === 'Yes' ? 'Referral Required' : 'General', // Auto-map for now
+        referral_required: data.referralRequired,
+        alternative_phone_number: data.alternativePhoneNumber,
+        husband_or_guardian_name: data.husbandOrGuardianName,
+        husband_age: data.husbandAge,
+        location: data.location,
         status: 'New Inquiry',
         age: data.age,
         gender: data.gender,
@@ -259,6 +272,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, userRole }) => {
         ...payload,
         id: createdLead.data?.id || `lead-${Date.now()}`,
         dateAdded: new Date().toISOString().split('T')[0],
+        referralRequired: data.referralRequired,
+        alternativePhoneNumber: data.alternativePhoneNumber,
+        husbandOrGuardianName: data.husbandOrGuardianName,
+        husbandAge: data.husbandAge,
+        location: data.location,
         treatmentDoctor: data.treatmentDoctor,
         treatmentSuggested: data.treatmentSuggested
       } as any;

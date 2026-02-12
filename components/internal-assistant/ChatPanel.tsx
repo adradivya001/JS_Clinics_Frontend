@@ -11,6 +11,8 @@ interface ChatPanelProps {
     messages: ChatMessage[];
     isTyping: boolean;
     onSendMessage: (message: string) => void;
+    onOptionClick?: (option: any) => void;
+    isLocked?: boolean;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -18,7 +20,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     onClose,
     messages,
     isTyping,
-    onSendMessage
+    onSendMessage,
+    onOptionClick,
+    isLocked
 }) => {
     return (
         <AnimatePresence>
@@ -61,10 +65,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                         </div>
 
                         {/* Content */}
-                        <MessageList messages={messages} isTyping={isTyping} />
+                        <MessageList messages={messages} isTyping={isTyping} onOptionClick={onOptionClick} />
 
                         {/* Input */}
-                        <InputArea onSendMessage={onSendMessage} isLoading={isTyping} />
+                        <InputArea onSendMessage={onSendMessage} isLoading={isTyping} isLocked={isLocked} />
                     </motion.div>
                 </>
             )}

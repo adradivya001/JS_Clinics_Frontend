@@ -22,6 +22,11 @@ export interface Lead {
     status: 'New Inquiry' | 'Contacted' | 'Stalling - Sent to CRO' | 'Converted - Active Patient' | 'Lost';
     dateAdded: string;
     email?: string;
+    referralRequired?: 'Yes' | 'No';
+    alternativePhoneNumber?: string;
+    husbandOrGuardianName?: string;
+    husbandAge?: string;
+    location?: string;
 }
 
 export interface Appointment {

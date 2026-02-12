@@ -348,11 +348,11 @@ export const api = {
 
     // Internal Assistant
     internalAssistant: {
-        chat: async (message: string) => {
-            return fetchJson<{ reply: string }>(`${API_BASE_URL}/api/internal-assistant/chat`, {
+        chat: async (payload: { message?: string; confirmationToken?: string; cancelToken?: string }) => {
+            return fetchJson<{ reply: string; type?: string; options?: any[] }>(`${API_BASE_URL}/api/internal-assistant/chat`, {
                 method: 'POST',
                 headers: getHeaders(),
-                body: JSON.stringify({ message })
+                body: JSON.stringify(payload)
             });
         }
     }
